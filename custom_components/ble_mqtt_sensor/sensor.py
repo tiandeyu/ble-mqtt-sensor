@@ -13,12 +13,11 @@ from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(30)
+SCAN_INTERVAL = timedelta(seconds=30)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_NAME): cv.string,
     vol.Required(CONF_MAC): cv.string,
-    vol.Optional(CONF_SCAN_INTERVAL, SCAN_INTERVAL): cv.time_period,
     vol.Required(CONF_DEVICE_CLASS): cv.string('meizu_remote'),
 })
 
@@ -32,7 +31,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     humidity_name = name + ' ' + ATTR_HUMIDITY
     battery_name = name + ' ' + ATTR_BATTERY
     mac_address = config.get(CONF_MAC)
-    update_interval = config.get(CONF_SCAN_INTERVAL)
+    update_interval = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
     add_devices([
         MeizuTemperature(hass, temperature_name, mac_address, update_interval),
         MeizuHumidity(hass, humidity_name, mac_address, update_interval),
@@ -46,7 +45,8 @@ class MeizuTemperature(Entity):
         self._hass = hass
         self._name = name
         self._mac_address = mac_address
-        self._state = 0
+        self._state = None
+        self._update()
         self.update = Throttle(interval)(self._update)
 
     def _update(self):
@@ -93,7 +93,8 @@ class MeizuHumidity(Entity):
         self._hass = hass
         self._name = name
         self._mac_address = mac_address
-        self._state = 0
+        self._state = None
+        self._update()
         self.update = Throttle(interval)(self._update)
 
     def _update(self):
@@ -139,7 +140,8 @@ class MeizuBattery(Entity):
         self._hass = hass
         self._name = name
         self._mac_address = mac_address
-        self._state = 0
+        self._state = None
+        self._update()
         self.update = Throttle(interval)(self._update)
 
     def _update(self):
