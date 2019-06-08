@@ -15,7 +15,7 @@ CONFIG_DEVICE_TYPE = 'device_type'
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_NAME): cv.string,
     vol.Required(CONFIG_MAC): cv.string,
-    vol.Required(CONFIG_DEVICE_TYPE): cv.string,
+    vol.Required(CONFIG_DEVICE_TYPE): cv.string('meizu_remote'),
 })
 
 ATTR_TEMPERATURE = 'Temperature'
