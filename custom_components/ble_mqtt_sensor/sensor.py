@@ -1,5 +1,4 @@
 import logging
-import asyncio
 import voluptuous as vol
 from homeassistant.core import callback
 from homeassistant.const import (TEMP_CELSIUS, CONF_NAME, )
@@ -11,21 +10,23 @@ import homeassistant.components.mqtt as mqtt
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_MAC = 'mac'
+CONFIG_DEVICE_TYPE = 'device_type'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_NAME): cv.string,
     vol.Required(CONFIG_MAC): cv.string,
+    vol.Required(CONFIG_DEVICE_TYPE): cv.string,
 })
 
-ATTR_TEMPERATURE = 'temperature'
-ATTR_HUMIDITY = 'humidity'
-ATTR_BATTERY = 'battery'
+ATTR_TEMPERATURE = 'Temperature'
+ATTR_HUMIDITY = 'Humidity'
+ATTR_BATTERY = 'Battery'
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     name = config.get(CONF_NAME)
-    temperature_name = name + '_' + ATTR_TEMPERATURE
-    humidity_name = name + '_' + ATTR_HUMIDITY
-    battery_name = name + '_' + ATTR_BATTERY
+    temperature_name = name + ' ' + ATTR_TEMPERATURE
+    humidity_name = name + ' ' + ATTR_HUMIDITY
+    battery_name = name + ' ' + ATTR_BATTERY
     mac_address = config.get(CONFIG_MAC)
     add_devices([
         MeizuTemperature(hass, temperature_name, mac_address),
@@ -64,11 +65,6 @@ class MeizuTemperature(Entity):
     def name(self):
         """Return the name of the device if any."""
         return self._name
-
-    @property
-    def mac_address(self):
-        """Flag supported features."""
-        return self._mac_address
 
     @property
     def state(self):
@@ -113,11 +109,6 @@ class MeizuHumidity(Entity):
         return self._name
 
     @property
-    def mac_address(self):
-        """Flag supported features."""
-        return self._mac_address
-
-    @property
     def state(self):
         """Return the state of the sensor."""
         return self._state
@@ -158,11 +149,6 @@ class MeizuBattery(Entity):
     def name(self):
         """Return the name of the device if any."""
         return self._name
-
-    @property
-    def mac_address(self):
-        """Flag supported features."""
-        return self._mac_address
 
     @property
     def state(self):

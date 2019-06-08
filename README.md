@@ -14,10 +14,15 @@ download all files from custom_components to your ha machine folder /config/cust
 ```
 
 在configuration.yaml配置
-add config to configuration.yaml
-```$xslt
+ 
+name: ha中显示传感器的名字
+ 
+mac: 小写mac地址 
+
+```yaml
 sensor:
   - platform: ble_mqtt_sensor
-    name: 'BLE sensor'
-    mac: ''
+    name: 'Meizu Remote'
+    mac: '68:3e:34:cc:d4:69'
+    device_type: meizu_remote
 ```
