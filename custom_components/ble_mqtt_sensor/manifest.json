@@ -1,0 +1,8 @@
+{
+  "domain": "ble_mqtt_sensor",
+  "name": "BLE to MQTT Sensor",
+  "documentation": "https://www.natic.cn",
+  "dependencies": [],
+  "codeowners": ["@natic"],
+  "requirements": []
+}
