@@ -19,10 +19,12 @@ name: ha中显示传感器的名字
  
 mac: 小写mac地址 
 
+scan_interval: 扫描间隔s，可选配置，默认30
 ```yaml
 sensor:
   - platform: ble_mqtt_sensor
     name: 'Meizu Remote'
     mac: '68:3e:34:cc:d4:69'
+    scan_interval: 60
     device_type: meizu_remote
 ```
