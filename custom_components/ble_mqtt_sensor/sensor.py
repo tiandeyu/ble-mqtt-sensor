@@ -2,14 +2,14 @@ import logging
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 import homeassistant.components.mqtt as mqtt
-from datetime import datetime, timedelta
+from datetime import timedelta
 from homeassistant.core import callback
 from homeassistant.const import (TEMP_CELSIUS,
                                  CONF_NAME, CONF_MAC, CONF_SCAN_INTERVAL, CONF_DEVICE_CLASS,
                                  DEVICE_CLASS_TEMPERATURE, DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_BATTERY, )
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import (PLATFORM_SCHEMA)
-from homeassistant.util import Throttle
+from homeassistant.helpers.event import track_time_interval
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,30 +36,27 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     topic = config.get(CONF_TOPIC, DEFAULT_TOPIC)
     set_suffix = config.get(CONF_SET_SUFFIX, DEFAULT_SET_SUFFIX)
     update_interval = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
-    add_devices([
-        MeizuTemperature(hass, name, mac_address, update_interval, topic, set_suffix),
-        MeizuHumidity(hass, name, mac_address, update_interval),
-    ])
+    device = MeizuRemote(hass, name, mac_address, topic, set_suffix)
+    add_devices(device.sensors)
+    track_time_interval(hass, device.update_temperature_humidity, update_interval)
+    track_time_interval(hass, device.update_battery_level, update_interval)
 
 
-class MeizuTemperature(Entity):
-    def __init__(self, hass, name, mac_address, interval, topic, set_suffix):
-        """Initialize the generic Xiaomi device."""
+class MeizuRemote(object):
+    def __init__(self, hass, name, mac_address, topic, set_suffix):
         self._hass = hass
-        self._name = name + ' ' + ATTR_TEMPERATURE
         self._mac_address = mac_address
         self._topic = topic
         self._set_suffix = set_suffix
-        self._state = None
-        self._state_attrs = {
-            ATTR_HUMIDITY: None,
-            ATTR_BATTERY: None
-        }
-        self._update()
-        self.update_battery_level()
-        self.update = Throttle(interval)(self._update)
+        self._temperature_sensor = MeizuTemperature(hass, name)
+        self._humidity_sensor = MeizuHumidity(hass, name)
 
-    def _update(self):
+        self.sensors = [
+            self._temperature_sensor,
+            self._humidity_sensor
+        ]
+
+    def update_temperature_humidity(self, now = None):
         payload = '85,3,8,17'
         sub_topic = self._mac_address + self._topic
         pub_topic = sub_topic + self._set_suffix
@@ -69,15 +66,16 @@ class MeizuTemperature(Entity):
         def msg_callback(msg):
             """Receive events published by and fire them on this hass instance."""
             results = msg.payload.split(',')
-            # 返回数据8位是温湿度信息
+            # 返回数据8位是温湿度信息, 45位温度，67位是湿度
             if len(results) == 8:
-                self._state = round((int(results[4]) + int(results[5]) * 16 * 16) / 100, 1)
-                self._state_attrs[ATTR_HUMIDITY] = round((int(results[6]) + int(results[7]) * 16 * 16) / 100, 1)
+                temperature = round((int(results[4]) + int(results[5]) * 16 * 16) / 100, 1)
+                humidity = round((int(results[6]) + int(results[7]) * 16 * 16) / 100, 1)
+                self._temperature_sensor.update_state(temperature)
+                self._humidity_sensor.update_state(humidity)
 
         mqtt.subscribe(self._hass, sub_topic, msg_callback)
 
-    @Throttle(timedelta(hours=12))
-    def update_battery_level(self):
+    def update_battery_level(self, now = None):
         payload = '85,3,1,16'
         sub_topic = self._mac_address + self._topic
         pub_topic = sub_topic + self._set_suffix
@@ -89,9 +87,28 @@ class MeizuTemperature(Entity):
             results = msg.payload.split(',')
             # 返回数据5位是电量信息
             if len(results) == 5:
-                self._state_attrs[ATTR_BATTERY] = round(int(results[4]) / 10, 1)
+                battery_level = round(int(results[4]) / 10, 1)
+                self._temperature_sensor.update_battery(battery_level)
+                self._humidity_sensor.update_battery(battery_level)
 
         mqtt.subscribe(self._hass, sub_topic, msg_callback)
+
+
+class MeizuTemperature(Entity):
+    def __init__(self, hass, name):
+        """Initialize the generic Xiaomi device."""
+        self._hass = hass
+        self._name = name + ' ' + ATTR_TEMPERATURE
+        self._state = None
+        self._state_attrs = {
+            ATTR_BATTERY: None
+        }
+
+    def update_state(self, state):
+        self._state = state
+
+    def update_battery(self, battery):
+        self._state_attrs[ATTR_BATTERY] = battery
 
     @property
     def name(self):
@@ -120,23 +137,21 @@ class MeizuTemperature(Entity):
 
 
 class MeizuHumidity(Entity):
-    def __init__(self, hass, name, mac_address, interval):
+    def __init__(self, hass, name):
         """Initialize the generic Xiaomi device."""
         self._hass = hass
         self._name = name + ' ' + ATTR_HUMIDITY
-        self._entity_id = "sensor." + name.replace(" ", "_") + "_" + ATTR_TEMPERATURE
-        self._mac_address = mac_address
         self._state = None
-        self._update()
-        self.update = Throttle(interval)(self._update)
+        self._state_attrs = {
+            ATTR_BATTERY: None
+        }
 
-    def _update(self):
-        stat = self._hass.states.get(self._entity_id)
-        if stat:
-            nowtime = datetime.utcnow()
-            updated_time = stat.last_updated.replace(tzinfo=None)
-            if nowtime - updated_time < timedelta(minutes=3):
-                self._state = stat.attributes[ATTR_HUMIDITY]
+
+    def update_state(self, state):
+        self._state = state
+
+    def update_battery(self, battery):
+        self._state_attrs[ATTR_BATTERY] = battery
 
     @property
     def name(self):
@@ -147,6 +162,11 @@ class MeizuHumidity(Entity):
     def state(self):
         """Return the state of the sensor."""
         return self._state
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes of the device."""
+        return self._state_attrs
 
     @property
     def unit_of_measurement(self):
