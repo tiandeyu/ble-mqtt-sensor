@@ -124,7 +124,7 @@ class MeizuHumidity(Entity):
         """Initialize the generic Xiaomi device."""
         self._hass = hass
         self._name = name + ' ' + ATTR_HUMIDITY
-        self._entity_id = "sensor." + name + "_" + ATTR_TEMPERATURE
+        self._entity_id = "sensor." + name.replace(" ", "_") + "_" + ATTR_TEMPERATURE
         self._mac_address = mac_address
         self._state = None
         self._update()
