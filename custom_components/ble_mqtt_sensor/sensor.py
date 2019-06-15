@@ -16,6 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_TOPIC = "topic"
 CONF_SET_SUFFIX = "set_suffix"
 SCAN_INTERVAL = timedelta(seconds=30)
+BATTERY_SCAN_INTERVAL = timedelta(hours=12)
 DEFAULT_TOPIC = "/SensorService/SensorValue"
 DEFAULT_SET_SUFFIX = "/Set"
 
@@ -31,15 +32,18 @@ ATTR_BATTERY = 'Battery'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
+    # get config
     name = config.get(CONF_NAME)
     mac_address = config.get(CONF_MAC)
     topic = config.get(CONF_TOPIC, DEFAULT_TOPIC)
     set_suffix = config.get(CONF_SET_SUFFIX, DEFAULT_SET_SUFFIX)
     update_interval = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
-    device = MeizuRemote(hass, name, mac_address, topic, set_suffix)
-    add_devices(device.sensors)
-    track_time_interval(hass, device.update_temperature_humidity, update_interval)
-    track_time_interval(hass, device.update_battery_level, update_interval)
+    # init meizu remote
+    meizu_remote = MeizuRemote(hass, name, mac_address, topic, set_suffix)
+    add_devices(meizu_remote.sensors)
+    # set update time
+    track_time_interval(hass, meizu_remote.update_temperature_humidity, update_interval)
+    track_time_interval(hass, meizu_remote.update_battery_level, BATTERY_SCAN_INTERVAL)
 
 
 class MeizuRemote(object):
@@ -55,8 +59,10 @@ class MeizuRemote(object):
             self._temperature_sensor,
             self._humidity_sensor
         ]
+        self.update_temperature_humidity()
+        self.update_battery_level()
 
-    def update_temperature_humidity(self, now = None):
+    def update_temperature_humidity(self, now=None):
         payload = '85,3,8,17'
         sub_topic = self._mac_address + self._topic
         pub_topic = sub_topic + self._set_suffix
@@ -75,7 +81,7 @@ class MeizuRemote(object):
 
         mqtt.subscribe(self._hass, sub_topic, msg_callback)
 
-    def update_battery_level(self, now = None):
+    def update_battery_level(self, now=None):
         payload = '85,3,1,16'
         sub_topic = self._mac_address + self._topic
         pub_topic = sub_topic + self._set_suffix
@@ -96,7 +102,6 @@ class MeizuRemote(object):
 
 class MeizuTemperature(Entity):
     def __init__(self, hass, name):
-        """Initialize the generic Xiaomi device."""
         self._hass = hass
         self._name = name + ' ' + ATTR_TEMPERATURE
         self._state = None
@@ -138,14 +143,12 @@ class MeizuTemperature(Entity):
 
 class MeizuHumidity(Entity):
     def __init__(self, hass, name):
-        """Initialize the generic Xiaomi device."""
         self._hass = hass
         self._name = name + ' ' + ATTR_HUMIDITY
         self._state = None
         self._state_attrs = {
             ATTR_BATTERY: None
         }
-
 
     def update_state(self, state):
         self._state = state
@@ -177,4 +180,3 @@ class MeizuHumidity(Entity):
     def device_class(self):
         """Return the device class of this entity."""
         return DEVICE_CLASS_HUMIDITY
-
