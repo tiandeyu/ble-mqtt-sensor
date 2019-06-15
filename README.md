@@ -16,7 +16,7 @@
 
 ### configuration.yaml配置 
 | 名称 | 可选 | 描述 |
-| --- | --- | --- |
+| ----- | ----- | ----- |
 | name | 否 | ha中显示传感器的名字 |  
 | mac | 否 | 小写mac地址 |
 | topic | 是 | ble2mqtt config.json里面配置的service name和characteristics name 默认/SensorService/SensorValue | 
