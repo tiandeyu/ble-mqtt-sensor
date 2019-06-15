@@ -5,7 +5,7 @@
 
 
 ### 下载custom component
-下载下面网址所有文件到如下目录/config/custom_components/
+下载下面网址所有文件到如下目录/config/custom_components/ 
 https://github.com/tiandeyu/ble-mqtt-sensor/tree/master/custom_components/ble_mqtt_sensor 
 
 ```shell
