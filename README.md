@@ -5,7 +5,8 @@
 
 
 ### 下载custom component
-下载custom_components下面所有文件到如下目录/config/custom_components/
+下载下面网址所有文件到如下目录/config/custom_components/
+https://github.com/tiandeyu/ble-mqtt-sensor/tree/master/custom_components/ble_mqtt_sensor 
 
 ```shell
 //文件目录结构如下
@@ -52,4 +53,5 @@ sensor:
     mac: '68:3e:34:cc:d4:71'
     device_class: meizu_remote
 ```
+
 
