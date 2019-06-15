@@ -7,7 +7,7 @@
 ### 下载custom component
 下载custom_components下面所有文件到如下目录/config/custom_components/
 
-```
+```shell
 //文件目录结构如下
 /config/custom_components/ble_mqtt_sensor/__init__.py
 /config/custom_components/ble_mqtt_sensor/sensor.py
@@ -16,12 +16,12 @@
 
 ### configuration.yaml配置 
 | 名称 | 可选 | 描述 |
-| ----- | ----- | ----- |
-| name | 否 | ha中显示传感器的名字 |  
+| :---- | :---: | ----- |
+| name | 否 | ha中显示传感器的名字 |
 | mac | 否 | 小写mac地址 |
-| topic | 是 | ble2mqtt config.json里面配置的service name和characteristics name 默认/SensorService/SensorValue | 
+| topic | 是 | ble2mqtt config.json里面配置的service name和characteristics name  默认/SensorService/SensorValue |
 | set_suffix | 是 | ble2mqtt config.json里面配置的set_suffix，默认/Set |
-| scan_interval | 是 | 扫描间隔s，默认30 |
+| scan_interval | 是 | 温湿度扫描间隔s，默认30，电池更新间隔为12小时，不可更改 |
 | device_class | 否 | meizu_remote代表魅族遥控器 |
 ```yaml
 sensor:
@@ -52,3 +52,4 @@ sensor:
     mac: '68:3e:34:cc:d4:71'
     device_class: meizu_remote
 ```
+
