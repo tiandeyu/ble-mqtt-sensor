@@ -60,9 +60,12 @@ class MeizuRemote(object):
             self._humidity_sensor
         ]
         self.update_temperature_humidity()
-        self.update_battery_level()
 
     def update_temperature_humidity(self, now=None):
+        #check if battery level out of date
+        if not (self._temperature_sensor.device_state_attributes[ATTR_BATTERY] and self._humidity_sensor.device_state_attributes[ATTR_BATTERY]):
+            _LOGGER.info("update meizu battery because it's out of date")
+            self.update_battery_level()
         payload = '85,3,8,17'
         sub_topic = self._mac_address + self._topic
         pub_topic = sub_topic + self._set_suffix
