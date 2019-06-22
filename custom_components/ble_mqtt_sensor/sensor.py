@@ -23,6 +23,8 @@ DEFAULT_SET_SUFFIX = "/Set"
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_NAME): cv.string,
     vol.Required(CONF_MAC): cv.string,
+    vol.Optional(CONF_TOPIC): cv.string,
+    vol.Optional(CONF_SET_SUFFIX): cv.string,
     vol.Required(CONF_DEVICE_CLASS): cv.string('meizu_remote'),
 })
 
