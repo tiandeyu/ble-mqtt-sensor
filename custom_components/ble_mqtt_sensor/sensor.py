@@ -77,8 +77,8 @@ class MeizuRemote(object):
         def msg_callback(msg):
             """Receive events published by and fire them on this hass instance."""
             results = msg.payload.split(',')
-            # 返回数据8位是温湿度信息, 45位温度，67位是湿度
-            if len(results) == 8:
+            # 返回数据8位是温湿度信息, 45位温度，67位是湿度，85,7,8,17,211,11,239,25
+            if len(results) == 8 and int(results[0]) == 85 and int(results[1]) == 7 and int(results[2]) == 8 and int(results[3]) == 17:
                 temperature = round((int(results[4]) + int(results[5]) * 16 * 16) / 100, 1)
                 humidity = round((int(results[6]) + int(results[7]) * 16 * 16) / 100, 1)
                 self._temperature_sensor.update_state(temperature)
@@ -96,8 +96,8 @@ class MeizuRemote(object):
         def msg_callback(msg):
             """Receive events published by and fire them on this hass instance."""
             results = msg.payload.split(',')
-            # 返回数据5位是电量信息
-            if len(results) == 5:
+            # 返回数据5位是电量信息,85,4,1,16,28
+            if len(results) == 5 and int(results[0]) == 85 and int(results[1]) == 4 and int(results[2]) == 1 and int(results[3]) == 16:
                 battery_level = round(int(results[4]) / 10, 1)
                 self._temperature_sensor.update_battery(battery_level)
                 self._humidity_sensor.update_battery(battery_level)
